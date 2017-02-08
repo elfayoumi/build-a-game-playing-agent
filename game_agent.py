@@ -7,6 +7,7 @@ You must test your agent's strength against a set of agents with known
 relative strength using tournament.py and include the results in your report.
 """
 import random
+from operator import itemgetter
 
 
 class Timeout(Exception):
@@ -36,7 +37,7 @@ def custom_score(game, player):
     float
         The heuristic value of the current game state to the specified player.
     """
-
+    return float(len(game.get_legal_moves(player)) - len(game.get_legal_moves(game.get_opponent(player))))
     print (game)
 
 
@@ -123,20 +124,31 @@ class CustomPlayer:
         # Perform any required initializations, including selecting an initial
         # move from the game board (i.e., an opening book), or returning
         # immediately if there are no legal moves
+        if game.move_count == 0:
+            return (game.height/2, game.width/2)
+
+        if len(legal_moves) == 0:
+            return (-1,-1)
 
         try:
             # The search method call (alpha beta or minimax) should happen in
             # here in order to avoid timeout. The try/except block will
             # automatically catch the exception raised by the search method
             # when the timer gets close to expiring
-            pass
-
+            if self.method == 'minimax':
+                scores = map(lambda move: (move, self.minimax(game, self.search_depth, True)), legal_moves)
+                highscore = max(scores, key=itemgetter(1))[0]
+                return highscore
+            else:
+                scores = map(lambda move: (move, self.alphabeta(game, self.search_depth, True)), legal_moves)
+                highscore = max(scores, key=itemgetter(1))[0]
+                return highscore
         except Timeout:
             # Handle any actions required at timeout, if necessary
             pass
 
         # Return the best move from the last completed search iteration
-        raise NotImplementedError
+        return (-1,-1)
 
     def minimax(self, game, depth, maximizing_player=True):
         """Implement the minimax search algorithm as described in the lectures.
@@ -172,8 +184,26 @@ class CustomPlayer:
         if self.time_left() < self.TIMER_THRESHOLD:
             raise Timeout()
 
-        # TODO: finish this function!
-        raise NotImplementedError
+        if game.move_count == 0 or depth ==0:
+            return self.score(game, self)
+        if maximizing_player:
+            v = float('-Inf')
+            for move in game.get_legal_moves(player = self):
+                board = game.forecast_move(move)
+                vd = self.minimax(board,depth-1,not maximizing_player)
+                if vd >v:
+                    v = vd
+
+            return v
+        else:
+            v = float('Inf')
+            for move in game.get_legal_moves(player=self):
+                board = game.forecast_move(move)
+                vd = self.minimax(board, depth - 1, not maximizing_player)
+                if vd < v:
+                    v = vd
+
+            return v
 
     def alphabeta(self, game, depth, alpha=float("-inf"), beta=float("inf"), maximizing_player=True):
         """Implement minimax search with alpha-beta pruning as described in the
@@ -216,5 +246,23 @@ class CustomPlayer:
         if self.time_left() < self.TIMER_THRESHOLD:
             raise Timeout()
 
-        # TODO: finish this function!
-        raise NotImplementedError
+        if game.move_count == 0 or depth ==0:
+            return self.score(game, self)
+        if maximizing_player:
+            v = float('-Inf')
+            for move in game.get_legal_moves(player = self):
+                board = game.forecast_move(move)
+                vd = self.minimax(board,depth-1,not maximizing_player)
+                if vd >v:
+                    v = vd
+
+            return v
+        else:
+            v = float('Inf')
+            for move in game.get_legal_moves(player=self):
+                board = game.forecast_move(move)
+                vd = self.minimax(board, depth - 1, not maximizing_player)
+                if vd < v:
+                    v = vd
+
+            return v
