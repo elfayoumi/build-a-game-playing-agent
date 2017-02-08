@@ -38,7 +38,7 @@ def custom_score(game, player):
         The heuristic value of the current game state to the specified player.
     """
     return float(len(game.get_legal_moves(player)) - len(game.get_legal_moves(game.get_opponent(player))))
-    print (game)
+    # print (game)
 
 
 
@@ -140,9 +140,15 @@ class CustomPlayer:
                 highscore = max(scores, key=itemgetter(1))[0]
                 return highscore
             else:
-                scores = map(lambda move: (move, self.alphabeta(game, self.search_depth, True)), legal_moves)
-                highscore = max(scores, key=itemgetter(1))[0]
-                return highscore
+                s = float('-inf')
+                m = (-1, -1)
+
+                for move in legal_moves:
+                    score = self.alphabeta(game, self.search_depth)
+                    if s < score:
+                        s = score
+                        m = move
+                return m
         except Timeout:
             # Handle any actions required at timeout, if necessary
             pass
@@ -183,12 +189,12 @@ class CustomPlayer:
         """
         if self.time_left() < self.TIMER_THRESHOLD:
             raise Timeout()
-
-        if game.move_count == 0 or depth ==0:
+        legal_moves = game.get_legal_moves(player=self if maximizing_player else game.get_opponent(self))
+        if len(legal_moves) == 0 or (depth == 0 and not self.iterative):
             return self.score(game, self)
         if maximizing_player:
             v = float('-Inf')
-            for move in game.get_legal_moves(player = self):
+            for move in legal_moves:
                 board = game.forecast_move(move)
                 vd = self.minimax(board,depth-1,not maximizing_player)
                 if vd >v:
@@ -197,7 +203,7 @@ class CustomPlayer:
             return v
         else:
             v = float('Inf')
-            for move in game.get_legal_moves(player=self):
+            for move in legal_moves:
                 board = game.forecast_move(move)
                 vd = self.minimax(board, depth - 1, not maximizing_player)
                 if vd < v:
@@ -246,23 +252,28 @@ class CustomPlayer:
         if self.time_left() < self.TIMER_THRESHOLD:
             raise Timeout()
 
-        if game.move_count == 0 or depth ==0:
+        legal_moves = game.get_legal_moves(player=self if maximizing_player else game.get_opponent(self))
+        if len(legal_moves) == 0 or (depth == 0 and not self.iterative):
             return self.score(game, self)
         if maximizing_player:
-            v = float('-Inf')
-            for move in game.get_legal_moves(player = self):
+            v = alpha
+            for move in legal_moves:
                 board = game.forecast_move(move)
-                vd = self.minimax(board,depth-1,not maximizing_player)
+                vd = self.alphabeta(board, depth - 1, v, beta, not maximizing_player)
                 if vd >v:
                     v = vd
+                    if v > beta:
+                        return beta
 
             return v
         else:
-            v = float('Inf')
-            for move in game.get_legal_moves(player=self):
+            v = beta
+            for move in legal_moves:
                 board = game.forecast_move(move)
-                vd = self.minimax(board, depth - 1, not maximizing_player)
+                vd = self.alphabeta(board, depth - 1, alpha, v, not maximizing_player)
                 if vd < v:
                     v = vd
+                    if v < alpha:
+                        return alpha
 
             return v
