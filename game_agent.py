@@ -253,7 +253,7 @@ class CustomPlayer:
             raise Timeout()
 
         legal_moves = game.get_legal_moves(player=self if maximizing_player else game.get_opponent(self))
-        if len(legal_moves) == 0 or (depth == 0 and not self.iterative):
+        if len(legal_moves) == 0 or (depth == 0 ):
             return self.score(game, self)
         if maximizing_player:
             v = alpha
