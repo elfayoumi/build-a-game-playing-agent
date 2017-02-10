@@ -37,7 +37,7 @@ def custom_score(game, player):
     float
         The heuristic value of the current game state to the specified player.
     """
-    return float(len(game.get_legal_moves(player))) **2 / float(len(game.get_legal_moves(game.get_opponent(player)))+0.01)
+    return float(len(game.get_legal_moves(player))) - float(len(game.get_legal_moves(game.get_opponent(player))))
     # print (game)
 
 
@@ -136,10 +136,10 @@ class CustomPlayer:
             # automatically catch the exception raised by the search method
             # when the timer gets close to expiring
             if self.method == 'minimax':
-                _, move = max([(self.minimax(game.forecast_move(m), self.search_depth, True), m) for m in legal_moves])
+                s, move = max([(self.minimax(game.forecast_move(m), self.search_depth, True), m) for m in legal_moves])
                 return move
             else:
-                _, move = max([(self.alphabeta(game.forecast_move(m), self.search_depth), m) for m in random.sample(legal_moves, k=len(legal_moves))])
+                s, move = max([(self.alphabeta(game.forecast_move(m), self.search_depth), m) for m in random.sample(legal_moves, k=len(legal_moves))])
                 return move
         except Timeout:
             # Handle any actions required at timeout, if necessary
@@ -182,8 +182,12 @@ class CustomPlayer:
         if self.time_left() < self.TIMER_THRESHOLD:
             raise Timeout()
         legal_moves = game.get_legal_moves(player=self if maximizing_player else game.get_opponent(self))
-        if len(legal_moves) == 0 or (depth == 0 and not self.iterative):
+        if len(legal_moves) == 0:
             return self.score(game, self), (-1,-1)
+        if depth == 1 and not self.iterative:
+            s, move = max([(self.score(game.forecast_move(m), self), m) for m in legal_moves])
+            return s,move
+
         if maximizing_player:
             v = float('-Inf')
             bestMove = (-1,-1)
@@ -249,8 +253,13 @@ class CustomPlayer:
             raise Timeout()
 
         legal_moves = game.get_legal_moves(player=self if maximizing_player else game.get_opponent(self))
-        if not legal_moves or (depth == 0 and not self.iterative):
+        if not legal_moves:
             return  self.score(game, self), (-1,-1)
+
+        if depth == 1 and not self.iterative:
+            s, move = max([(self.score(game.forecast_move(m), self), m) for m in legal_moves])
+            return s,move
+
         rand_moves = random.sample(legal_moves, k=len(legal_moves))
         if maximizing_player:
             v = alpha
