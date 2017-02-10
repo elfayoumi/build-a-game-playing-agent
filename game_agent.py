@@ -37,7 +37,7 @@ def custom_score(game, player):
     float
         The heuristic value of the current game state to the specified player.
     """
-    return float(len(game.get_legal_moves(player)) - len(game.get_legal_moves(game.get_opponent(player))))
+    return float(2*len(game.get_legal_moves(player)) - len(game.get_legal_moves(game.get_opponent(player))))
     # print (game)
 
 
@@ -125,9 +125,10 @@ class CustomPlayer:
         # move from the game board (i.e., an opening book), or returning
         # immediately if there are no legal moves
         if game.move_count == 0:
-            return (game.height/2, game.width/2)
+            _, move = max([(self.score(game.forecast_move(m), self), m) for m in legal_moves])
+            return move
 
-        if len(legal_moves) == 0:
+        if not legal_moves:
             return (-1,-1)
 
         try:
@@ -136,19 +137,11 @@ class CustomPlayer:
             # automatically catch the exception raised by the search method
             # when the timer gets close to expiring
             if self.method == 'minimax':
-                scores = map(lambda move: (move, self.minimax(game, self.search_depth, True)), legal_moves)
-                highscore = max(scores, key=itemgetter(1))[0]
-                return highscore
+                _, move = max([(self.minimax(game.forecast_move(m), self.search_depth, True), m) for m in random.sample(legal_moves, k=len(legal_moves))])
+                return move
             else:
-                s = float('-inf')
-                m = (-1, -1)
-
-                for move in legal_moves:
-                    score = self.alphabeta(game, self.search_depth)
-                    if s < score:
-                        s = score
-                        m = move
-                return m
+                _, move = max([(self.alphabeta(game.forecast_move(m), self.search_depth), m) for m in random.sample(legal_moves, k=len(legal_moves))])
+                return move
         except Timeout:
             # Handle any actions required at timeout, if necessary
             pass
@@ -257,7 +250,7 @@ class CustomPlayer:
             return self.score(game, self)
         if maximizing_player:
             v = alpha
-            for move in legal_moves:
+            for move in random.sample(legal_moves, k=len(legal_moves)):
                 board = game.forecast_move(move)
                 vd = self.alphabeta(board, depth - 1, v, beta, not maximizing_player)
                 if vd >v:
@@ -268,7 +261,7 @@ class CustomPlayer:
             return v
         else:
             v = beta
-            for move in legal_moves:
+            for move in random.sample(legal_moves, k=len(legal_moves)):
                 board = game.forecast_move(move)
                 vd = self.alphabeta(board, depth - 1, alpha, v, not maximizing_player)
                 if vd < v:
