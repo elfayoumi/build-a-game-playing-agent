@@ -37,7 +37,7 @@ def custom_score(game, player):
     float
         The heuristic value of the current game state to the specified player.
     """
-    return float(2*len(game.get_legal_moves(player)) - len(game.get_legal_moves(game.get_opponent(player))))
+    return float(len(game.get_legal_moves(player))) *1.5 - float(len(game.get_legal_moves(game.get_opponent(player))))
     # print (game)
 
 
@@ -124,12 +124,11 @@ class CustomPlayer:
         # Perform any required initializations, including selecting an initial
         # move from the game board (i.e., an opening book), or returning
         # immediately if there are no legal moves
+        if not legal_moves:
+            return (-1,-1)
         if game.move_count == 0:
             _, move = max([(self.score(game.forecast_move(m), self), m) for m in legal_moves])
             return move
-
-        if not legal_moves:
-            return (-1,-1)
 
         try:
             # The search method call (alpha beta or minimax) should happen in
