@@ -37,7 +37,7 @@ def custom_score(game, player):
     float
         The heuristic value of the current game state to the specified player.
     """
-    return float(len(game.get_legal_moves(player))) *1.5 - float(len(game.get_legal_moves(game.get_opponent(player))))
+    return float(len(game.get_legal_moves(player))) **2 / float(len(game.get_legal_moves(game.get_opponent(player)))+0.01)
     # print (game)
 
 
@@ -183,25 +183,29 @@ class CustomPlayer:
             raise Timeout()
         legal_moves = game.get_legal_moves(player=self if maximizing_player else game.get_opponent(self))
         if len(legal_moves) == 0 or (depth == 0 and not self.iterative):
-            return self.score(game, self)
+            return self.score(game, self), (-1,-1)
         if maximizing_player:
             v = float('-Inf')
+            bestMove = (-1,-1)
             for move in legal_moves:
                 board = game.forecast_move(move)
-                vd = self.minimax(board,depth-1,not maximizing_player)
+                vd,_ = self.minimax(board, depth-1, board.active_player == self)
                 if vd >v:
                     v = vd
+                    bestMove = move
 
-            return v
+            return v,bestMove
         else:
             v = float('Inf')
+            bestMove = (-1, -1)
             for move in legal_moves:
                 board = game.forecast_move(move)
-                vd = self.minimax(board, depth - 1, not maximizing_player)
+                vd,_ = self.minimax(board, depth - 1, board.active_player == self)
                 if vd < v:
                     v = vd
+                    bestMove = move
 
-            return v
+            return v,bestMove
 
     def alphabeta(self, game, depth, alpha=float("-inf"), beta=float("inf"), maximizing_player=True):
         """Implement minimax search with alpha-beta pruning as described in the
@@ -245,28 +249,32 @@ class CustomPlayer:
             raise Timeout()
 
         legal_moves = game.get_legal_moves(player=self if maximizing_player else game.get_opponent(self))
-        if len(legal_moves) == 0 or (depth == 0 and not self.iterative):
-            return self.score(game, self)
+        if not legal_moves or (depth == 0 and not self.iterative):
+            return  self.score(game, self), (-1,-1)
         rand_moves = random.sample(legal_moves, k=len(legal_moves))
         if maximizing_player:
             v = alpha
+            bestMove = (-1, -1)
             for move in rand_moves:
                 board = game.forecast_move(move)
-                vd = self.alphabeta(board, depth - 1, v, beta,  not maximizing_player)
+                vd,_ = self.alphabeta(board, depth - 1, v, beta, board.active_player == self)
                 if vd >v:
                     v = vd
+                    bestMove = move
                 if v > beta:
-                    return beta
+                    return beta, bestMove
 
-            return v
+            return v, bestMove
         else:
             v = beta
+            bestMove = (-1, -1)
             for move in rand_moves:
                 board = game.forecast_move(move)
-                vd = self.alphabeta(board, depth - 1, alpha, v, not maximizing_player)
+                vd,_ = self.alphabeta(board, depth - 1, alpha, v, board.active_player == self)
                 if vd < v:
                     v = vd
+                    bestMove = move
                 if v < alpha:
-                    return alpha
+                    return alpha, bestMove
 
-            return v
+            return v, bestMove
