@@ -136,7 +136,7 @@ class CustomPlayer:
             # automatically catch the exception raised by the search method
             # when the timer gets close to expiring
             if self.method == 'minimax':
-                _, move = max([(self.minimax(game.forecast_move(m), self.search_depth, True), m) for m in random.sample(legal_moves, k=len(legal_moves))])
+                _, move = max([(self.minimax(game.forecast_move(m), self.search_depth, True), m) for m in legal_moves])
                 return move
             else:
                 _, move = max([(self.alphabeta(game.forecast_move(m), self.search_depth), m) for m in random.sample(legal_moves, k=len(legal_moves))])
@@ -241,31 +241,32 @@ class CustomPlayer:
                 to pass the project unit tests; you cannot call any other
                 evaluation function directly.
         """
-        if self.time_left() < self.TIMER_THRESHOLD:
+        if self.time_left() < self.TIMER_THRESHOLD :
             raise Timeout()
 
         legal_moves = game.get_legal_moves(player=self if maximizing_player else game.get_opponent(self))
-        if len(legal_moves) == 0 or (depth == 0 ):
+        if len(legal_moves) == 0 or (depth == 0 and not self.iterative):
             return self.score(game, self)
+        rand_moves = random.sample(legal_moves, k=len(legal_moves))
         if maximizing_player:
             v = alpha
-            for move in random.sample(legal_moves, k=len(legal_moves)):
+            for move in rand_moves:
                 board = game.forecast_move(move)
-                vd = self.alphabeta(board, depth - 1, v, beta, not maximizing_player)
+                vd = self.alphabeta(board, depth - 1, v, beta,  not maximizing_player)
                 if vd >v:
                     v = vd
-                    if v > beta:
-                        return beta
+                if v > beta:
+                    return beta
 
             return v
         else:
             v = beta
-            for move in random.sample(legal_moves, k=len(legal_moves)):
+            for move in rand_moves:
                 board = game.forecast_move(move)
                 vd = self.alphabeta(board, depth - 1, alpha, v, not maximizing_player)
                 if vd < v:
                     v = vd
-                    if v < alpha:
-                        return alpha
+                if v < alpha:
+                    return alpha
 
             return v
