@@ -193,7 +193,7 @@ class CustomPlayer:
             bestMove = (-1,-1)
             for move in legal_moves:
                 board = game.forecast_move(move)
-                vd,_ = self.minimax(board, depth-1, board.active_player == self)
+                vd, _ = self.minimax(board, depth - 1, not maximizing_player)
                 if vd >v:
                     v = vd
                     bestMove = move
@@ -204,7 +204,7 @@ class CustomPlayer:
             bestMove = (-1, -1)
             for move in legal_moves:
                 board = game.forecast_move(move)
-                vd,_ = self.minimax(board, depth - 1, board.active_player == self)
+                vd, _ = self.minimax(board, depth - 1, not maximizing_player)
                 if vd < v:
                     v = vd
                     bestMove = move
@@ -266,7 +266,7 @@ class CustomPlayer:
             bestMove = (-1, -1)
             for move in rand_moves:
                 board = game.forecast_move(move)
-                vd,_ = self.alphabeta(board, depth - 1, v, beta, board.active_player == self)
+                vd, _ = self.alphabeta(board, depth - 1, v, beta, not maximizing_player)
                 if vd >v:
                     v = vd
                     bestMove = move
@@ -279,7 +279,7 @@ class CustomPlayer:
             bestMove = (-1, -1)
             for move in rand_moves:
                 board = game.forecast_move(move)
-                vd,_ = self.alphabeta(board, depth - 1, alpha, v, board.active_player == self)
+                vd, _ = self.alphabeta(board, depth - 1, alpha, v, not maximizing_player)
                 if vd < v:
                     v = vd
                     bestMove = move
@@ -287,3 +287,75 @@ class CustomPlayer:
                     return alpha, bestMove
 
             return v, bestMove
+
+    def alphabeta_(self, game, depth, alpha=float("-inf"), beta=float("inf"), maximizing_player=True):
+        """Implement minimax search with alpha-beta pruning as described in the
+       lectures.
+
+       Parameters
+       ----------
+       game : isolation.Board
+           An instance of the Isolation game `Board` class representing the
+           current game state
+
+       depth : int
+           Depth is an integer representing the maximum number of plies to
+           search in the game tree before aborting
+
+       alpha : float
+           Alpha limits the lower bound of search on minimizing layers
+
+       beta : float
+           Beta limits the upper bound of search on maximizing layers
+
+       maximizing_player : bool
+           Flag indicating whether the current search depth corresponds to a
+           maximizing layer (True) or a minimizing layer (False)
+
+       Returns
+       ----------
+       float
+           The score for the current search branch
+
+       tuple(int, int)
+           The best move for the current branch; (-1, -1) for no legal moves
+       """
+        if self.time_left() < self.TIMER_THRESHOLD:
+            raise Timeout()
+
+        if maximizing_player:
+            player = game.active_player
+            new_top_score = lambda x, y: x < y
+            reverse = True
+            top_score = float("-inf")
+        else:
+            player = game.inactive_player
+            new_top_score = lambda x, y: x > y
+            reverse = False
+            top_score = float("inf")
+
+        top_move = (-1, -1)
+        if depth == 0:
+            return self.score(game, player), top_move
+
+        possible_moves = [(move, game.forecast_move(move)) for move in game.get_legal_moves()]
+        if len(possible_moves) == 0:
+            return game.utility(player), top_move
+
+        possible_moves.sort(key=lambda el: self.score(game, player), reverse=reverse)
+
+        for action, state in possible_moves:
+            board_score, board_action = self.alphabeta(state, depth - 1, alpha, beta, not maximizing_player)
+            if new_top_score(top_score, board_score):
+                top_score = board_score
+                top_move = action
+            if maximizing_player:
+                if top_score >= beta:
+                    return top_score, top_move
+                alpha = max(alpha, top_score)
+            else:
+                if top_score <= alpha:
+                    return top_score, top_move
+                beta = min(beta, top_score)
+
+        return top_score, top_move
