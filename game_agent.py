@@ -124,7 +124,7 @@ class CustomPlayer:
         # Perform any required initializations, including selecting an initial
         # move from the game board (i.e., an opening book), or returning
         # immediately if there are no legal moves
-        if not legal_moves:
+        if len(legal_moves) == 0:
             return (-1,-1)
         if game.move_count == 0:
             _, move = max([(self.score(game.forecast_move(m), self), m) for m in legal_moves])
@@ -137,10 +137,10 @@ class CustomPlayer:
             # when the timer gets close to expiring
             if self.method == 'minimax':
                 s, move = max(
-                    [(self.minimax(game.forecast_move(m), self.search_depth - 1, False), m) for m in legal_moves])
+                    [(self.minimax(game.forecast_move(m), self.search_depth, False), m) for m in legal_moves])
                 return move
             else:
-                s, move = max([(self.alphabeta(game.forecast_move(m), self.search_depth - 1, alpha=float("-inf"),
+                s, move = max([(self.alphabeta(game.forecast_move(m), self.search_depth, alpha=float("-inf"),
                                                beta=float("inf"), maximizing_player=False), m) for m in
                                random.sample(legal_moves, k=len(legal_moves))])
                 return move
@@ -186,6 +186,9 @@ class CustomPlayer:
             raise Timeout()
 
         legal_moves = game.get_legal_moves(game.active_player)
+
+        if len(legal_moves) == 0:
+            return game.utility(self), (-1, -1)
 
         if depth == 0 and not self.iterative:
             return self.score(game, self), (-1, -1)
