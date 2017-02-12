@@ -184,12 +184,11 @@ class CustomPlayer:
         """
         if self.time_left() < self.TIMER_THRESHOLD:
             raise Timeout()
-        legal_moves = game.get_legal_moves(player=self if maximizing_player else game.get_opponent(self))
-        if len(legal_moves) == 0:
-            return self.score(game, self), (-1,-1)
-        if depth == 1 and not self.iterative:
-            s, move = max([(self.score(game.forecast_move(m), self), m) for m in legal_moves])
-            return s,move
+
+        legal_moves = game.get_legal_moves(game.active_player)
+
+        if depth == 0 and not self.iterative:
+            return self.score(game, self), (-1, -1)
 
         if maximizing_player:
             v = float('-Inf')
