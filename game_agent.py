@@ -136,10 +136,13 @@ class CustomPlayer:
             # automatically catch the exception raised by the search method
             # when the timer gets close to expiring
             if self.method == 'minimax':
-                s, move = max([(self.minimax(game.forecast_move(m), self.search_depth, True), m) for m in legal_moves])
+                s, move = max(
+                    [(self.minimax(game.forecast_move(m), self.search_depth - 1, False), m) for m in legal_moves])
                 return move
             else:
-                s, move = max([(self.alphabeta(game.forecast_move(m), self.search_depth), m) for m in random.sample(legal_moves, k=len(legal_moves))])
+                s, move = max([(self.alphabeta(game.forecast_move(m), self.search_depth - 1, alpha=float("-inf"),
+                                               beta=float("inf"), maximizing_player=False), m) for m in
+                               random.sample(legal_moves, k=len(legal_moves))])
                 return move
         except Timeout:
             # Handle any actions required at timeout, if necessary
@@ -252,25 +255,25 @@ class CustomPlayer:
         if self.time_left() < self.TIMER_THRESHOLD :
             raise Timeout()
 
-        legal_moves = game.get_legal_moves(player=self if maximizing_player else game.get_opponent(self))
-        if not legal_moves:
-            return  self.score(game, self), (-1,-1)
+        legal_moves = game.get_legal_moves(game.active_player)
+        if len(legal_moves) == 0:
+            return game.utility(self), (-1, -1)
 
-        if depth == 1 and not self.iterative:
-            s, move = max([(self.score(game.forecast_move(m), self), m) for m in legal_moves])
-            return s,move
+        if depth == 0 and not self.iterative:
+            return self.score(game, self), (-1, -1)
 
         rand_moves = random.sample(legal_moves, k=len(legal_moves))
+        # rand_moves = legal_moves
         if maximizing_player:
             v = alpha
             bestMove = (-1, -1)
             for move in rand_moves:
                 board = game.forecast_move(move)
                 vd, _ = self.alphabeta(board, depth - 1, v, beta, not maximizing_player)
-                if vd >v:
+                if vd > v:
                     v = vd
                     bestMove = move
-                if v > beta:
+                if v >= beta:
                     return beta, bestMove
 
             return v, bestMove
@@ -283,7 +286,7 @@ class CustomPlayer:
                 if vd < v:
                     v = vd
                     bestMove = move
-                if v < alpha:
+                if v <= alpha:
                     return alpha, bestMove
 
             return v, bestMove
