@@ -194,27 +194,11 @@ class CustomPlayer:
             return self.score(game, self), (-1, -1)
 
         if maximizing_player:
-            v = float('-Inf')
-            bestMove = (-1,-1)
-            for move in legal_moves:
-                board = game.forecast_move(move)
-                vd, _ = self.minimax(board, depth - 1, not maximizing_player)
-                if vd >v:
-                    v = vd
-                    bestMove = move
-
-            return v,bestMove
+            v, bestMove = max([(self.minimax(game.forecast_move(m), depth-1, not maximizing_player)[0],m) for m in legal_moves])
         else:
-            v = float('Inf')
-            bestMove = (-1, -1)
-            for move in legal_moves:
-                board = game.forecast_move(move)
-                vd, _ = self.minimax(board, depth - 1, not maximizing_player)
-                if vd < v:
-                    v = vd
-                    bestMove = move
+            v, bestMove = min([(self.minimax(game.forecast_move(m), depth - 1, not maximizing_player)[0],m) for m in legal_moves])
 
-            return v,bestMove
+        return v, bestMove
 
     def alphabeta(self, game, depth, alpha=float("-inf"), beta=float("inf"), maximizing_player=True):
         """Implement minimax search with alpha-beta pruning as described in the
