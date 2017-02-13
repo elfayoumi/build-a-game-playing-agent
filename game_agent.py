@@ -7,6 +7,7 @@ You must test your agent's strength against a set of agents with known
 relative strength using tournament.py and include the results in your report.
 """
 import random
+from operator import itemgetter
 
 
 class Timeout(Exception):
@@ -17,6 +18,9 @@ class Timeout(Exception):
 def custom_score(game, player):
     """Calculate the heuristic value of a game state from the point of view
     of the given player.
+
+    Note: this function should be called from within a Player instance as
+    `self.score()` -- you should not need to call this function directly.
 
     Parameters
     ----------
@@ -29,13 +33,12 @@ def custom_score(game, player):
         one of the player objects `game.__player_1__` or `game.__player_2__`.)
 
     Returns
-    ----------
+    -------
     float
         The heuristic value of the current game state to the specified player.
     """
-
-    # TODO: finish this function!
-    raise NotImplementedError
+    return float(len(game.get_legal_moves(player))) - float(len(game.get_legal_moves(game.get_opponent(player))))
+    # print (game)
 
 
 class CustomPlayer:
@@ -107,7 +110,7 @@ class CustomPlayer:
             the game.
 
         Returns
-        ----------
+        -------
         (int, int)
             Board coordinates corresponding to a legal move; may return
             (-1, -1) if there are no available legal moves.
@@ -120,20 +123,48 @@ class CustomPlayer:
         # Perform any required initializations, including selecting an initial
         # move from the game board (i.e., an opening book), or returning
         # immediately if there are no legal moves
+        bestMove = (-1, -1)
+        if len(legal_moves) == 0:
+            return bestMove
+        if game.move_count == 0:
+            _, bestMove = max([(self.score(game.forecast_move(m), self), m) for m in legal_moves])
+            return bestMove
 
         try:
             # The search method call (alpha beta or minimax) should happen in
             # here in order to avoid timeout. The try/except block will
             # automatically catch the exception raised by the search method
             # when the timer gets close to expiring
-            pass
+            if self.iterative != True:
+                if self.method == 'minimax':
+                    s, bestMove = max(
+                        [(self.minimax(game=game.forecast_move(m),depth= self.search_depth, maximizing_player= False)[0], m) for m in legal_moves])
+                else:
+                    s, bestMove = max([(self.alphabeta(game=game.forecast_move(m), depth=self.search_depth, maximizing_player=False)[0], m) for m in
+                                       random.sample(legal_moves, k=len(legal_moves))])
+            else:
+                depth = 0
+                oldBestMove, oldBestValue = (-1, -1), 0
+                while True:
+                    if self.method == 'minimax':
+                        s, bestMove = max(
+                            [(self.minimax(game.forecast_move(m), depth = depth, maximizing_player= False)[0], m) for m in legal_moves])
+                    else:
+                        s, bestMove = max(
+                            [(self.alphabeta(game.forecast_move(m), depth= depth, maximizing_player=False)[0], m) for m in
+                             random.sample(legal_moves, k=len(legal_moves))])
 
+                    depth += 1
+                    if bestMove[0] == oldBestMove[0] and bestMove[1] == oldBestMove[1]:
+                        return bestMove
+
+                    oldBestMove = bestMove
         except Timeout:
             # Handle any actions required at timeout, if necessary
             pass
 
         # Return the best move from the last completed search iteration
-        raise NotImplementedError
+        return bestMove
 
     def minimax(self, game, depth, maximizing_player=True):
         """Implement the minimax search algorithm as described in the lectures.
@@ -153,18 +184,38 @@ class CustomPlayer:
             maximizing layer (True) or a minimizing layer (False)
 
         Returns
-        ----------
+        -------
         float
             The score for the current search branch
 
         tuple(int, int)
             The best move for the current branch; (-1, -1) for no legal moves
+
+        Notes
+        -----
+            (1) You MUST use the `self.score()` method for board evaluation
+                to pass the project unit tests; you cannot call any other
+                evaluation function directly.
         """
         if self.time_left() < self.TIMER_THRESHOLD:
             raise Timeout()
 
-        # TODO: finish this function!
-        raise NotImplementedError
+        legal_moves = game.get_legal_moves(game.active_player)
+
+        if len(legal_moves) == 0:
+            return game.utility(self), (-1, -1)
+
+        if depth == 0:
+            return self.score(game, self), (-1, -1)
+
+        if maximizing_player:
+            v, bestMove = max(
+                [(self.minimax(game.forecast_move(m), depth - 1, not maximizing_player)[0], m) for m in legal_moves])
+        else:
+            v, bestMove = min(
+                [(self.minimax(game.forecast_move(m), depth - 1, not maximizing_player)[0], m) for m in legal_moves])
+
+        return v, bestMove
 
     def alphabeta(self, game, depth, alpha=float("-inf"), beta=float("inf"), maximizing_player=True):
         """Implement minimax search with alpha-beta pruning as described in the
@@ -191,15 +242,126 @@ class CustomPlayer:
             maximizing layer (True) or a minimizing layer (False)
 
         Returns
-        ----------
+        -------
         float
             The score for the current search branch
 
         tuple(int, int)
             The best move for the current branch; (-1, -1) for no legal moves
+
+        Notes
+        -----
+            (1) You MUST use the `self.score()` method for board evaluation
+                to pass the project unit tests; you cannot call any other
+                evaluation function directly.
         """
         if self.time_left() < self.TIMER_THRESHOLD:
             raise Timeout()
 
-        # TODO: finish this function!
-        raise NotImplementedError
+        legal_moves = game.get_legal_moves(game.active_player)
+        if len(legal_moves) == 0:
+            return game.utility(self), (-1, -1)
+
+        if depth == 0:
+            return self.score(game, self), (-1, -1)
+
+        rand_moves = random.sample(legal_moves, k=len(legal_moves))
+        # rand_moves = legal_moves
+        if maximizing_player:
+            v = alpha
+            bestMove = (-1, -1)
+            for move in rand_moves:
+                board = game.forecast_move(move)
+                vd, _ = self.alphabeta(board, depth - 1, v, beta, not maximizing_player)
+                if vd > v:
+                    v = vd
+                    bestMove = move
+                if v >= beta:
+                    return beta, bestMove
+
+            return v, bestMove
+        else:
+            v = beta
+            bestMove = (-1, -1)
+            for move in rand_moves:
+                board = game.forecast_move(move)
+                vd, _ = self.alphabeta(board, depth - 1, alpha, v, not maximizing_player)
+                if vd < v:
+                    v = vd
+                    bestMove = move
+                if v <= alpha:
+                    return alpha, bestMove
+
+            return v, bestMove
+
+    def alphabeta_(self, game, depth, alpha=float("-inf"), beta=float("inf"), maximizing_player=True):
+        """Implement minimax search with alpha-beta pruning as described in the
+       lectures.
+
+       Parameters
+       ----------
+       game : isolation.Board
+           An instance of the Isolation game `Board` class representing the
+           current game state
+
+       depth : int
+           Depth is an integer representing the maximum number of plies to
+           search in the game tree before aborting
+
+       alpha : float
+           Alpha limits the lower bound of search on minimizing layers
+
+       beta : float
+           Beta limits the upper bound of search on maximizing layers
+
+       maximizing_player : bool
+           Flag indicating whether the current search depth corresponds to a
+           maximizing layer (True) or a minimizing layer (False)
+
+       Returns
+       ----------
+       float
+           The score for the current search branch
+
+       tuple(int, int)
+           The best move for the current branch; (-1, -1) for no legal moves
+       """
+        if self.time_left() < self.TIMER_THRESHOLD:
+            raise Timeout()
+
+        if maximizing_player:
+            player = game.active_player
+            new_top_score = lambda x, y: x < y
+            reverse = True
+            top_score = float("-inf")
+        else:
+            player = game.inactive_player
+            new_top_score = lambda x, y: x > y
+            reverse = False
+            top_score = float("inf")
+
+        top_move = (-1, -1)
+        if depth == 0:
+            return self.score(game, player), top_move
+
+        possible_moves = [(move, game.forecast_move(move)) for move in game.get_legal_moves()]
+        if len(possible_moves) == 0:
+            return game.utility(player), top_move
+
+        possible_moves.sort(key=lambda el: self.score(game, player), reverse=reverse)
+
+        for action, state in possible_moves:
+            board_score, board_action = self.alphabeta(state, depth - 1, alpha, beta, not maximizing_player)
+            if new_top_score(top_score, board_score):
+                top_score = board_score
+                top_move = action
+            if maximizing_player:
+                if top_score >= beta:
+                    return top_score, top_move
+                alpha = max(alpha, top_score)
+            else:
+                if top_score <= alpha:
+                    return top_score, top_move
+                beta = min(beta, top_score)
+
+        return top_score, top_move
