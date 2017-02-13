@@ -135,7 +135,7 @@ class CustomPlayer:
             # here in order to avoid timeout. The try/except block will
             # automatically catch the exception raised by the search method
             # when the timer gets close to expiring
-            if self.iterative != True:
+            if not self.iterative:
                 if self.method == 'minimax':
                     s, bestMove = max(
                         [(self.minimax(game=game.forecast_move(m),depth= self.search_depth, maximizing_player= False)[0], m) for m in legal_moves])
@@ -144,21 +144,18 @@ class CustomPlayer:
                                        random.sample(legal_moves, k=len(legal_moves))])
             else:
                 depth = 0
-                oldBestMove, oldBestValue = (-1, -1), 0
+
                 while True:
                     if self.method == 'minimax':
-                        s, bestMove = max(
+                        _, bestMove = max(
                             [(self.minimax(game.forecast_move(m), depth = depth, maximizing_player= False)[0], m) for m in legal_moves])
                     else:
-                        s, bestMove = max(
+                        _, bestMove = max(
                             [(self.alphabeta(game.forecast_move(m), depth= depth, maximizing_player=False)[0], m) for m in
                              random.sample(legal_moves, k=len(legal_moves))])
 
                     depth += 1
-                    if bestMove[0] == oldBestMove[0] and bestMove[1] == oldBestMove[1]:
-                        return bestMove
 
-                    oldBestMove = bestMove
         except Timeout:
             # Handle any actions required at timeout, if necessary
             pass
@@ -200,13 +197,13 @@ class CustomPlayer:
         if self.time_left() < self.TIMER_THRESHOLD:
             raise Timeout()
 
+        if depth == 0:
+            return self.score(game, self), (-1, -1)
+
         legal_moves = game.get_legal_moves(game.active_player)
 
         if len(legal_moves) == 0:
             return game.utility(self), (-1, -1)
-
-        if depth == 0:
-            return self.score(game, self), (-1, -1)
 
         if maximizing_player:
             v, bestMove = max(
@@ -258,12 +255,12 @@ class CustomPlayer:
         if self.time_left() < self.TIMER_THRESHOLD:
             raise Timeout()
 
+        if depth == 0:
+            return self.score(game, self), (-1, -1)
+
         legal_moves = game.get_legal_moves(game.active_player)
         if len(legal_moves) == 0:
             return game.utility(self), (-1, -1)
-
-        if depth == 0:
-            return self.score(game, self), (-1, -1)
 
         rand_moves = random.sample(legal_moves, k=len(legal_moves))
         # rand_moves = legal_moves
