@@ -1,5 +1,5 @@
 
-\documentclass[12pt,a4paper]{article}
+\documentclass[11pt,a4paper]{article}
 \usepackage{amsmath}
 \usepackage{url}
 \usepackage[margin=0.5in]{geometry}
@@ -32,7 +32,7 @@
 
 \begin{document}
 \SweaveOpts{concordance=TRUE}
-I ran the agent for three different heuristic functions for 200 matches against each oponent, which count to 800 games, which took long time to process. The baseline provided (iterative deeping improved \verb!ID_IMPROVED!) gave the following results in ubuntu linux, 16.04 operating system:
+I ran the agent for three different heuristic functions for 200 matches against each opponent, which count to 800 games, which took long time to process. The baseline provided (iterative deepening improved \verb!ID_IMPROVED!) gave the following results in ubuntu Linux, 16.04 operating system:
 \begin{verbatim}
 *************************
  Evaluating: ID_Improved 
@@ -53,14 +53,13 @@ Results:
 ----------
 ID_Improved         83.20%
 \end{verbatim}
-Three different heuristic functions were used with the gaming agent, while the performance was quite comparable, the heuristic functions that tries to take the apponent number of moves into account performed better than iterative deepining improved. 
-\begin{description}
-\item{Heuristic function 1}\\
+Three different heuristic functions were used with the gaming agent, while the performance was quite comparable, the heuristic functions that tries to take the opponent number of moves into account performed better than iterative deepening improved. 
+\section{Heuristic function 1}
 For the first heuristic function, I took the number of player available move $n_p$:
 \begin{equation}
 \text{Score} = n_p \label{eq:1}
 \end{equation}
-This heuristic function does not take the oponent remaining number of moves into account and gave the following:
+This heuristic function does not take the opponent remaining number of moves into account and gave the following:
 \begin{verbatim}
 *************************
    Evaluating: Student   
@@ -82,12 +81,12 @@ Results:
 Student             82.18%
 \end{verbatim}
 This is worse than the baseline, and so was not chosen. 
-\item{Heuristic function 2}\\
-This time, we try to take into  account the remaining moves of the oponent $n_o$ into account:
+\section{Heuristic function 2}
+This time, we try to take into  account the remaining moves of the opponent $n_o$ into account:
 \begin{equation}
 \text{Score} = n_p - n_o\label{eq:2}
 \end{equation}
-This equation takes into account the oponent number of moves, so with the number of moves available to the player, take the one that gives the oponent the lowest number of moves. The result was better than baseline:
+This equation takes into account the opponent number of moves, so with the number of moves available to the player, take the one that gives the opponent the lowest number of moves. The result was better than baseline:
 \begin{verbatim}
 *************************
    Evaluating: Student   
@@ -108,13 +107,13 @@ Results:
 ----------
 Student             83.88%
 \end{verbatim}
-So, taking the number of moves available to the oponent into account, gave rise to the performance.
-\item{Heuristic function 3}\\
-Encouraged by the previous result, now what if we try to give very high score for having the available moves to the oponent zero?
+So, taking the number of moves available to the opponent into account, gave rise to the performance.
+\section{Heuristic function 3}
+Encouraged by the previous result, now what if we try to give very high score for having the available moves to the opponent zero?
 \begin{equation}
 \text{Score} = \frac{n_p^2}{n_o +0.01}\label{eq:3}
 \end{equation}
-Equation~\eqref{eq:3} still penalise the palyer for the availble moves of the oponent, but if the opononet number of moves is zero, the available moves to the players is multiplied by 100, so making the heuristic evaluation function very high.
+Equation~\eqref{eq:3} still penalise the player for the available moves of the opponent, but if the opponent number of moves is zero, the available moves to the players is multiplied by 100, so making the heuristic evaluation function very high.
 \begin{verbatim}
 
 *************************
@@ -137,8 +136,10 @@ Results:
 Student             84.55%
 \end{verbatim}
 This is the best heuristic function so far, better than the baseline and perform better than the rest.
-\end{description}
-<<fig=TRUE, echo=FALSE>>=
+
+\begin{center}
+\bfig
+<<fig=TRUE, echo=FALSE,width=6, height=4>>=
 library(ggplot2)
 library(dplyr)
 library(tidyr)
@@ -152,6 +153,9 @@ data.frame(x=x, y=y) %>% ggplot(aes(x=x,y=y, fill=x)) +
   ylim(c(0,85)) +
   theme(legend.position="none")
 @
+\label{The performance of different heuristic functions agains the baseline}
+\efig
+\end{center}
 
 
 \end{document}    
