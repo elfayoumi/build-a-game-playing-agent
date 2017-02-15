@@ -1,0 +1,157 @@
+
+\documentclass[12pt,a4paper]{article}
+\usepackage{amsmath}
+\usepackage{url}
+\usepackage[margin=0.5in]{geometry}
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{mathtools}
+\newcount\ppnum
+\newcommand\ppnumber[1]{%
+        \ppnum=#1\relax
+        \ifnum\ppnum<0
+                $-$%
+                \ppnum=-\ppnum
+        \fi
+        \let\pptemp\empty
+        \loop\ifnum\ppnum>999
+                \count255=\ppnum
+                \divide\ppnum by1000
+                \count255=\numexpr \count255 - 1000*\ppnum \relax
+                \edef\pptemp{,\ifnum\count255<100 0\ifnum\count255<10 0\fi\fi
+                             \the\count255 \pptemp}%
+        \repeat
+        \the\ppnum
+        \pptemp
+}
+\renewcommand{\baselinestretch}{1}
+\renewcommand{\thefootnote}{\alph{footnote}}
+\newcommand{\bfig}{\begin{figure}}
+\newcommand{\efig}{\end{figure}}
+
+
+\begin{document}
+\SweaveOpts{concordance=TRUE}
+I ran the agent for three different heuristic functions for 200 matches against each oponent, which count to 800 games, which took long time to process. The baseline provided (iterative deeping improved \verb!ID_IMPROVED!) gave the following results in ubuntu linux, 16.04 operating system:
+\begin{verbatim}
+*************************
+ Evaluating: ID_Improved 
+*************************
+
+Playing Matches:
+----------
+  Match 1: ID_Improved vs   Random    	Result: 745 to 55
+  Match 2: ID_Improved vs   MM_Null   	Result: 620 to 180
+  Match 3: ID_Improved vs   MM_Open   	Result: 558 to 242
+  Match 4: ID_Improved vs MM_Improved 	Result: 535 to 265
+  Match 5: ID_Improved vs   AB_Null   	Result: 613 to 187
+  Match 6: ID_Improved vs   AB_Open   	Result: 790 to 10
+  Match 7: ID_Improved vs AB_Improved 	Result: 798 to 2
+
+
+Results:
+----------
+ID_Improved         83.20%
+\end{verbatim}
+Three different heuristic functions were used with the gaming agent, while the performance was quite comparable, the heuristic functions that tries to take the apponent number of moves into account performed better than iterative deepining improved. 
+\begin{description}
+\item{Heuristic function 1}\\
+For the first heuristic function, I took the number of player available move $n_p$:
+\begin{equation}
+\text{Score} = n_p \label{eq:1}
+\end{equation}
+This heuristic function does not take the oponent remaining number of moves into account and gave the following:
+\begin{verbatim}
+*************************
+   Evaluating: Student   
+*************************
+
+Playing Matches:
+----------
+  Match 1:   Student   vs   Random    	Result: 728 to 72
+  Match 2:   Student   vs   MM_Null   	Result: 610 to 190
+  Match 3:   Student   vs   MM_Open   	Result: 544 to 256
+  Match 4:   Student   vs MM_Improved 	Result: 547 to 253
+  Match 5:   Student   vs   AB_Null   	Result: 582 to 218
+  Match 6:   Student   vs   AB_Open   	Result: 791 to 9
+  Match 7:   Student   vs AB_Improved 	Result: 800 to 0
+
+
+Results:
+----------
+Student             82.18%
+\end{verbatim}
+This is worse than the baseline, and so was not chosen. 
+\item{Heuristic function 2}\\
+This time, we try to take into  account the remaining moves of the oponent $n_o$ into account:
+\begin{equation}
+\text{Score} = n_p - n_o\label{eq:2}
+\end{equation}
+This equation takes into account the oponent number of moves, so with the number of moves available to the player, take the one that gives the oponent the lowest number of moves. The result was better than baseline:
+\begin{verbatim}
+*************************
+   Evaluating: Student   
+*************************
+
+Playing Matches:
+----------
+  Match 1:   Student   vs   Random    	Result: 740 to 60
+  Match 2:   Student   vs   MM_Null   	Result: 641 to 159
+  Match 3:   Student   vs   MM_Open   	Result: 555 to 245
+  Match 4:   Student   vs MM_Improved 	Result: 565 to 235
+  Match 5:   Student   vs   AB_Null   	Result: 608 to 192
+  Match 6:   Student   vs   AB_Open   	Result: 791 to 9
+  Match 7:   Student   vs AB_Improved 	Result: 797 to 3
+
+
+Results:
+----------
+Student             83.88%
+\end{verbatim}
+So, taking the number of moves available to the oponent into account, gave rise to the performance.
+\item{Heuristic function 3}\\
+Encouraged by the previous result, now what if we try to give very high score for having the available moves to the oponent zero?
+\begin{equation}
+\text{Score} = \frac{n_p^2}{n_o +0.01}\label{eq:3}
+\end{equation}
+Equation~\eqref{eq:3} still penalise the palyer for the availble moves of the oponent, but if the opononet number of moves is zero, the available moves to the players is multiplied by 100, so making the heuristic evaluation function very high.
+\begin{verbatim}
+
+*************************
+   Evaluating: Student   
+*************************
+
+Playing Matches:
+----------
+  Match 1:   Student   vs   Random    	Result: 737 to 63
+  Match 2:   Student   vs   MM_Null   	Result: 625 to 175
+  Match 3:   Student   vs   MM_Open   	Result: 592 to 208
+  Match 4:   Student   vs MM_Improved 	Result: 571 to 229
+  Match 5:   Student   vs   AB_Null   	Result: 616 to 184
+  Match 6:   Student   vs   AB_Open   	Result: 794 to 6
+  Match 7:   Student   vs AB_Improved 	Result: 800 to 0
+
+
+Results:
+----------
+Student             84.55%
+\end{verbatim}
+This is the best heuristic function so far, better than the baseline and perform better than the rest.
+\end{description}
+<<fig=TRUE, echo=FALSE>>=
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+x=c('Baseline', 'Heuristic 1', 'Heuristic 2', 'Heuristic 3')
+y=c(83.2, 82.18, 83.88, 84.55)
+data.frame(x=x, y=y) %>% ggplot(aes(x=x,y=y, fill=x)) +
+  geom_bar(colour="black", stat="identity") + 
+  theme_bw() +
+  xlab('Method') +
+  ylab('Performance')+
+  ylim(c(0,85)) +
+  theme(legend.position="none")
+@
+
+
+\end{document}    
