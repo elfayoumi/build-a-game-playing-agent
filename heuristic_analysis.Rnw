@@ -32,6 +32,7 @@
 
 \begin{document}
 \SweaveOpts{concordance=TRUE}
+\section*{Heuristic Analysis}
 I ran the agent for three different heuristic functions for 200 matches against each opponent, which count to 800 games, which took long time to process. The baseline provided (iterative deepening improved \verb!ID_IMPROVED!) gave the following results in ubuntu Linux, 16.04 operating system:
 \begin{verbatim}
 *************************
@@ -54,7 +55,7 @@ Results:
 ID_Improved         83.20%
 \end{verbatim}
 Three different heuristic functions were used with the gaming agent, while the performance was quite comparable, the heuristic functions that tries to take the opponent number of moves into account performed better than iterative deepening improved. 
-\section{Heuristic function 1}
+\subsection*{Heuristic function 1}
 For the first heuristic function, I took the number of player available move $n_p$:
 \begin{equation}
 \text{Score} = n_p \label{eq:1}
@@ -81,7 +82,7 @@ Results:
 Student             82.18%
 \end{verbatim}
 This is worse than the baseline, and so was not chosen. 
-\section{Heuristic function 2}
+\subsection*{Heuristic function 2}
 This time, we try to take into  account the remaining moves of the opponent $n_o$ into account:
 \begin{equation}
 \text{Score} = n_p - n_o\label{eq:2}
@@ -108,7 +109,7 @@ Results:
 Student             83.88%
 \end{verbatim}
 So, taking the number of moves available to the opponent into account, gave rise to the performance.
-\section{Heuristic function 3}
+\subsection*{Heuristic function 3}
 Encouraged by the previous result, now what if we try to give very high score for having the available moves to the opponent zero?
 \begin{equation}
 \text{Score} = \frac{n_p^2}{n_o +0.01}\label{eq:3}
@@ -156,6 +157,12 @@ data.frame(x=x, y=y) %>% ggplot(aes(x=x,y=y, fill=x)) +
 \label{The performance of different heuristic functions agains the baseline}
 \efig
 \end{center}
-
-
+\subsection*{Conclusion}
+The heuristic analysis showed that a good heuristic function should have the following:
+\begin{itemize}
+\item{Should give more value if the user player has lots of move}
+\item{Should penalise for the available moves to the opponent}
+\item{Heuristic function should give high rewards for wining the game}
+\end{itemize}
+These were the reasons for sugesting heuristic function 3, where we used: $\frac{n_P^2}{n_o+0.01}$ which gives higher points for higher available moves and penalise for opponent available moves but gives very high rewards for wining the game ($n_o=0$).
 \end{document}    
