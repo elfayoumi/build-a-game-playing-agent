@@ -141,8 +141,8 @@ class CustomPlayer:
 
                     _, best_move = self.minimax(game, depth)
 
-                elif self.metbest_movehod == "alphabeta":
-                    _, new_move = self.alphabeta(game, depth)
+                elif self.method == "alphabeta":
+                    _, best_move = self.alphabeta(game, depth)
 
                 if not self.iterative:
                     break
