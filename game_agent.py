@@ -199,13 +199,13 @@ class CustomPlayer:
             return game.utility(self), (-1, -1)
 
         if maximizing_player:
-            v, bestMove = max(
+            v, best_move = max(
                 [(self.minimax(game.forecast_move(m), depth - 1, not maximizing_player)[0], m) for m in legal_moves])
         else:
-            v, bestMove = min(
+            v, best_move = min(
                 [(self.minimax(game.forecast_move(m), depth - 1, not maximizing_player)[0], m) for m in legal_moves])
 
-        return v, bestMove
+        return v, best_move
 
     def alphabeta(self, game, depth, alpha=float("-inf"), beta=float("inf"), maximizing_player=True):
         """Implement minimax search with alpha-beta pruning as described in the
@@ -259,30 +259,30 @@ class CustomPlayer:
         # rand_moves = legal_moves
         if maximizing_player:
             v = alpha
-            bestMove = (-1, -1)
+            best_move = (-1, -1)
             for move in rand_moves:
                 board = game.forecast_move(move)
                 vd, _ = self.alphabeta(board, depth - 1, v, beta, not maximizing_player)
                 if vd > v:
                     v = vd
-                    bestMove = move
+                    best_move = move
                 if v >= beta:
-                    return beta, bestMove
+                    return beta, best_move
 
-            return v, bestMove
+            return v, best_move
         else:
             v = beta
-            bestMove = (-1, -1)
+            best_move = (-1, -1)
             for move in rand_moves:
                 board = game.forecast_move(move)
                 vd, _ = self.alphabeta(board, depth - 1, alpha, v, not maximizing_player)
                 if vd < v:
                     v = vd
-                    bestMove = move
+                    best_move = move
                 if v <= alpha:
-                    return alpha, bestMove
+                    return alpha, best_move
 
-            return v, bestMove
+            return v, best_move
 
     def alphabeta_(self, game, depth, alpha=float("-inf"), beta=float("inf"), maximizing_player=True):
         """Implement minimax search with alpha-beta pruning as described in the
