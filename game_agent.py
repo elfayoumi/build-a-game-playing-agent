@@ -37,11 +37,7 @@ def custom_score(game, player):
     float
         The heuristic value of the current game state to the specified player.
     """
-    #return float(len(game.get_legal_moves(player))) 
-    #return float(len(game.get_legal_moves(player)))**2/ float(len(game.get_legal_moves(game.get_opponent(player)))+1)
     return float(len(game.get_legal_moves(player)))**2/ float(len(game.get_legal_moves(game.get_opponent(player)))+.01)
-    #return float(len(game.get_legal_moves(player))) - float(len(game.get_legal_moves(game.get_opponent(player))))
-    # print (game)
 
 
 class CustomPlayer:
@@ -126,45 +122,39 @@ class CustomPlayer:
         # Perform any required initializations, including selecting an initial
         # move from the game board (i.e., an opening book), or returning
         # immediately if there are no legal moves
-        bestMove = (-1, -1)
+        best_move = (-1, -1)
         if len(legal_moves) == 0:
-            return bestMove
+            return best_move
         if game.move_count == 0:
-            _, bestMove = max([(self.score(game.forecast_move(m), self), m) for m in legal_moves])
-            return bestMove
+            _, best_move = max([(self.score(game.forecast_move(m), self), m) for m in legal_moves])
+            return best_move
 
         try:
             # The search method call (alpha beta or minimax) should happen in
             # here in order to avoid timeout. The try/except block will
             # automatically catch the exception raised by the search method
             # when the timer gets close to expiring
-            if not self.iterative:
-                if self.method == 'minimax':
-                    s, bestMove = max(
-                        [(self.minimax(game=game.forecast_move(m),depth= self.search_depth, maximizing_player= False)[0], m) for m in legal_moves])
-                else:
-                    s, bestMove = max([(self.alphabeta(game=game.forecast_move(m), depth=self.search_depth, maximizing_player=False)[0], m) for m in
-                                       random.sample(legal_moves, k=len(legal_moves))])
-            else:
-                depth = 0
+            depth = 0 if self.iterative else self.search_depth
+            while True:
 
-                while True:
-                    if self.method == 'minimax':
-                        _, bestMove = max(
-                            [(self.minimax(game.forecast_move(m), depth = depth, maximizing_player= False)[0], m) for m in legal_moves])
-                    else:
-                        _, bestMove = max(
-                            [(self.alphabeta(game.forecast_move(m), depth= depth, maximizing_player=False)[0], m) for m in
-                             random.sample(legal_moves, k=len(legal_moves))])
+                if self.method == "minimax":
 
-                    depth += 1
+                    _, best_move = self.minimax(game, depth)
+
+                elif self.metbest_movehod == "alphabeta":
+                    _, new_move = self.alphabeta(game, depth)
+
+                if not self.iterative:
+                    break
+
+                depth += 1
 
         except Timeout:
             # Handle any actions required at timeout, if necessary
             pass
 
         # Return the best move from the last completed search iteration
-        return bestMove
+        return best_move
 
     def minimax(self, game, depth, maximizing_player=True):
         """Implement the minimax search algorithm as described in the lectures.
