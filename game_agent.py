@@ -7,7 +7,6 @@ You must test your agent's strength against a set of agents with known
 relative strength using tournament.py and include the results in your report.
 """
 import random
-from operator import itemgetter
 
 
 class Timeout(Exception):
@@ -37,7 +36,8 @@ def custom_score(game, player):
     float
         The heuristic value of the current game state to the specified player.
     """
-    return float(len(game.get_legal_moves(player)))**2/ float(len(game.get_legal_moves(game.get_opponent(player)))+.01)
+    return float(len(game.get_legal_moves(player))) ** 2 / float(
+        len(game.get_legal_moves(game.get_opponent(player))) + .01)
 
 
 class CustomPlayer:
