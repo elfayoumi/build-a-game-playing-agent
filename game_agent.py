@@ -123,7 +123,7 @@ class CustomPlayer:
         # move from the game board (i.e., an opening book), or returning
         # immediately if there are no legal moves
         best_move = (-1, -1)
-        if len(legal_moves) == 0:
+        if not legal_moves:
             return best_move
         if game.move_count == 0:
             _, best_move = max([(self.score(game.forecast_move(m), self), m) for m in legal_moves])
@@ -195,7 +195,7 @@ class CustomPlayer:
 
         legal_moves = game.get_legal_moves(game.active_player)
 
-        if len(legal_moves) == 0:
+        if not legal_moves:
             return game.utility(self), (-1, -1)
 
         if maximizing_player:
